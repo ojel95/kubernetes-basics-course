@@ -349,3 +349,133 @@ kubectl port-forward --namespace=ingress-nginx service/ingress-nginx-controller 
 ```
 
 You should now see Hello World!!! displayed on your browser when you access the link, http://<your_hostname>.127.0.0.1.sslip.io:8081
+
+## ConfigMaps
+
+ConfigMaps are used to store non-confidential configuration data in key-value pairs. This can include configuration files, command-line arguments, environment variables, or any other type of configuration data that your application might need.
+
+### Key Features
+
+- Non-Confidential Data: ConfigMaps should not be used for storing sensitive information such as passwords or API keys.
+- Decoupling Configuration from Pods: ConfigMaps allow you to separate configuration artifacts from image content to keep containerized applications portable.
+- Key-Value Pairs: The data is stored as key-value pairs.
+- Flexibility: Can be consumed as environment variables, command-line arguments, or mounted as files in a volume.
+
+### Commands
+
+- Creating a ConfigMap Inline
+
+We can create a ConfigMap quickly using kubectl inline. This has some advantages where you don't need to create a file to store all the values. To do this we can run the following command:
+
+```
+kubectl create configmap configmap-warning --from-literal=message=goodbye.world
+```
+
+- Creating a ConfigMap From a File
+
+```
+kubectl create -f configmap.yaml
+```
+
+- Viewing a ConfigMap
+
+Like all objects in Kubernetes we are going to use the describe command to display the values within a ConfigMap:
+
+```
+kubectl describe configmaps configmap-warning
+```
+
+### Example
+
+For testing the configMap we create a file called configmap-test-pod.yaml to create a Pod that uses the configMap. Check the file.
+
+Now to create this Pod:
+
+```
+kubectl create -f configmap-test-pod.yaml
+```
+
+Now we can get those environmental variable:
+
+```
+kubectl logs configmap-test-pod
+```
+
+With the output looking like this where we can see CONFIGMAP_MESSAGE=hello.world and CONFIGMAP_WARNING=goodbye.world.:
+
+```
+KUBERNETES_PORT=tcp://10.43.0.1:443
+KUBERNETES_SERVICE_PORT=443
+CONFIGMAP_MESSAGE=hello.world
+...
+CONFIGMAP_WARNING=goodbye.world
+```
+
+## Secrets
+
+Secrets are used to store sensitive information such as passwords, OAuth tokens, SSH keys, etc. Secrets are similar to ConfigMaps but designed to handle sensitive data more securely.
+
+### Key Features
+
+- Confidential Data: Secrets are intended for storing sensitive information.
+- Base64 Encoded: The data in Secrets is stored in base64-encoded format.
+- Access Control: Kubernetes provides access control mechanisms to restrict access to Secrets.
+- Decoupling from Pods: Like ConfigMaps, Secrets allow you to decouple sensitive data from your application code and images.
+
+### Commands
+
+- Creating a Secret Inline
+The Kubernetes tool kubectl allows us to create Secrets inline and without needing a file. To do this we can run the following command:
+
+```
+kubectl create secret generic inline-secret --from-literal=username=user --from-literal=password=password
+```
+
+- We can check and see what this looks like by doing a describe on the secrets:
+
+```
+kubectl describe secrets inline-secret
+```
+
+- Creating a Secret From a File
+
+```
+kubectl create -f secret.yaml
+```
+
+- Take a look at this Secret using the describe command:
+
+```
+kubectl describe secrets podsecret
+```
+
+### Example
+
+We are going to create a file called secret-test-pod.yaml. Check the file.
+
+We can now create this pod:
+
+```
+kubectl create -f secret-test-pod.yaml
+```
+
+With the output looking something like this: `pod/secret-test-pod created`
+
+Now to see these values we can check the logs:
+
+```
+kubectl logs secret-test-pod
+```
+
+And the output will look something like this, where we can see the USERNAME=user and the PASSWORD=password.:
+
+```
+KUBERNETES_PORT=tcp://10.43.0.1:443
+KUBERNETES_SERVICE_PORT=443
+HOSTNAME=secret-test-pod
+SHLVL=1
+HOME=/root
+USERNAME=user
+...
+PASSWORD=password
+```
